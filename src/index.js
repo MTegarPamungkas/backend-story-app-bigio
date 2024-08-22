@@ -14,6 +14,9 @@ app.use(
 app.use(express.json());
 
 app.use("/api", storyRoutes);
+app.use((req, res, next) => {
+  res.send("Run");
+});
 
 connectDB();
 // Start server

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "install": "node src/seedCategories.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
   },
   "author": "Tegar",
   "license": "ISC",

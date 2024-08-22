@@ -161,18 +161,15 @@ module.exports = function storyController({
         const { title, synopsis, writer, category, tags, status, chapters } =
           req.body;
 
-        // Validate story ID
         if (!mongoose.Types.ObjectId.isValid(storyId)) {
           return res.status(400).json({ error: "Invalid story ID" });
         }
 
-        // Find the existing story
         const existingStory = await storyRepository.findById(storyId);
         if (!existingStory) {
           return res.status(404).json({ error: "Story not found" });
         }
 
-        // Handle cover image upload
         let coverImageUrl = existingStory.coverImage;
         if (req.file) {
           const file = req.file.buffer;
@@ -192,7 +189,6 @@ module.exports = function storyController({
           coverImageUrl = result.fileUrl;
         }
 
-        // Parse and validate chapters
         let parsedChapters = [];
         if (chapters) {
           try {
@@ -206,7 +202,6 @@ module.exports = function storyController({
           }
         }
 
-        // Update chapters
         const chapterMap = new Map();
         existingStory.chapters.forEach((chapter) => {
           chapterMap.set(chapter._id.toString(), chapter);
@@ -228,10 +223,8 @@ module.exports = function storyController({
           }
         });
 
-        // Add any remaining existing chapters that weren't updated
         updatedChapters.push(...Array.from(chapterMap.values()));
 
-        // Update story with new data
         const updatedStory = await storyRepository.update(storyId, {
           title,
           synopsis,

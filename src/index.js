@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const storyRoutes = require("./frameworks/routes/storyRoutes");
 const connectDB = require("./config/database");
 require("dotenv").config();
@@ -8,7 +7,7 @@ const cors = require("cors");
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://story-app-bigio.vercel.app"], // Ganti dengan origin dari aplikasi frontendmu
+    origin: ["http://localhost:5173", "https://story-app-bigio.vercel.app"],
   })
 );
 app.use(express.json());
@@ -19,7 +18,6 @@ app.use((req, res, next) => {
 });
 
 connectDB();
-// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

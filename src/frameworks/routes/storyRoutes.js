@@ -36,6 +36,7 @@ router.put(
   upload.single("coverImage"),
   storyController.updateStory
 );
+router.delete("/story/:storyId", storyController.deleteStory);
 
 router.post("/story/:storyId/chapter", chapterController.addChapterToStory);
 router.delete(

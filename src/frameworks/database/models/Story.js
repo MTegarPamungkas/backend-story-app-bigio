@@ -3,7 +3,7 @@ const chapterSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     content: { type: String, required: true },
-    lastUpdated: { type: Date, default: Date.now },
+    // lastUpdated: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

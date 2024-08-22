@@ -22,6 +22,10 @@ class StoryRepository {
       runValidators: true,
     });
   }
+
+  async delete(storyId) {
+    return await this.StoryModel.findByIdAndDelete(storyId);
+  }
 }
 
 module.exports = StoryRepository;

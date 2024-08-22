@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
-
 const createStory = require("../use-cases/story/createStory");
 const createTempStory = require("../use-cases/story/createTempStory");
 const saveTempStoryToStory = require("../use-cases/story/saveTempStoryToStory");
@@ -127,6 +126,7 @@ module.exports = function storyController({
         res.status(500).json({ error: error.message });
       }
     },
+
     getStories: async (req, res) => {
       try {
         const stories = await storyRepository.findAll();
@@ -154,23 +154,26 @@ module.exports = function storyController({
         res.status(500).json({ error: error.message });
       }
     },
+
     updateStory: async (req, res) => {
       try {
         const { storyId } = req.params;
         const { title, synopsis, writer, category, tags, status, chapters } =
           req.body;
 
+        // Validate story ID
         if (!mongoose.Types.ObjectId.isValid(storyId)) {
           return res.status(400).json({ error: "Invalid story ID" });
         }
 
+        // Find the existing story
         const existingStory = await storyRepository.findById(storyId);
         if (!existingStory) {
           return res.status(404).json({ error: "Story not found" });
         }
 
+        // Handle cover image upload
         let coverImageUrl = existingStory.coverImage;
-
         if (req.file) {
           const file = req.file.buffer;
           const uniqueFileName = `${uuidv4()}-${Date.now()}-${
@@ -186,19 +189,49 @@ module.exports = function storyController({
             },
           });
 
-          const { fileUrl } = result;
-          coverImageUrl = fileUrl;
+          coverImageUrl = result.fileUrl;
         }
 
+        // Parse and validate chapters
         let parsedChapters = [];
         if (chapters) {
           try {
             parsedChapters = JSON.parse(chapters);
+            if (!Array.isArray(parsedChapters)) {
+              throw new Error("Chapters data is not an array");
+            }
           } catch (error) {
+            console.error("Error parsing chapters:", error.message);
             return res.status(400).json({ error: "Invalid chapter data" });
           }
         }
 
+        // Update chapters
+        const chapterMap = new Map();
+        existingStory.chapters.forEach((chapter) => {
+          chapterMap.set(chapter._id.toString(), chapter);
+        });
+
+        const updatedChapters = [];
+        parsedChapters.forEach((newChapter) => {
+          if (newChapter._id) {
+            const existingChapter = chapterMap.get(newChapter._id.toString());
+            if (existingChapter) {
+              updatedChapters.push({
+                ...existingChapter.toObject(),
+                ...newChapter,
+              });
+              chapterMap.delete(newChapter._id.toString());
+            }
+          } else {
+            updatedChapters.push(newChapter);
+          }
+        });
+
+        // Add any remaining existing chapters that weren't updated
+        updatedChapters.push(...Array.from(chapterMap.values()));
+
+        // Update story with new data
         const updatedStory = await storyRepository.update(storyId, {
           title,
           synopsis,
@@ -207,10 +240,30 @@ module.exports = function storyController({
           tags,
           status,
           coverImage: coverImageUrl,
-          chapters: parsedChapters,
+          chapters: updatedChapters,
         });
 
         res.status(200).json(updatedStory);
+      } catch (error) {
+        console.error("Error updating story:", error.message);
+        res.status(500).json({ error: error.message });
+      }
+    },
+
+    deleteStory: async (req, res) => {
+      try {
+        const { storyId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(storyId)) {
+          return res.status(400).json({ error: "Invalid story ID" });
+        }
+
+        const deletedStory = await storyRepository.delete(storyId);
+        if (!deletedStory) {
+          return res.status(404).json({ error: "Story not found" });
+        }
+
+        res.status(200).json({ message: "Story deleted successfully" });
       } catch (error) {
         res.status(500).json({ error: error.message });
       }

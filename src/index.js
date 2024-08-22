@@ -8,7 +8,7 @@ const cors = require("cors");
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173", // Ganti dengan origin dari aplikasi frontendmu
+    origin: ["http://localhost:5173", "https://story-app-bigio.vercel.app"], // Ganti dengan origin dari aplikasi frontendmu
   })
 );
 app.use(express.json());

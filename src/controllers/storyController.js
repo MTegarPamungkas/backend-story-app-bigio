@@ -157,7 +157,8 @@ module.exports = function storyController({
     updateStory: async (req, res) => {
       try {
         const { storyId } = req.params;
-        const updateData = req.body;
+        const { title, synopsis, writer, category, tags, status, chapters } =
+          req.body;
 
         if (!mongoose.Types.ObjectId.isValid(storyId)) {
           return res.status(400).json({ error: "Invalid story ID" });
@@ -168,7 +169,8 @@ module.exports = function storyController({
           return res.status(404).json({ error: "Story not found" });
         }
 
-        // Handle file upload if present
+        let coverImageUrl = existingStory.coverImage;
+
         if (req.file) {
           const file = req.file.buffer;
           const uniqueFileName = `${uuidv4()}-${Date.now()}-${
@@ -185,11 +187,29 @@ module.exports = function storyController({
           });
 
           const { fileUrl } = result;
-          updateData.coverImage = fileUrl; // Update with new file URL
+          coverImageUrl = fileUrl;
         }
 
-        // Update the story with new data
-        const updatedStory = await storyRepository.update(storyId, updateData);
+        let parsedChapters = [];
+        if (chapters) {
+          try {
+            parsedChapters = JSON.parse(chapters);
+          } catch (error) {
+            return res.status(400).json({ error: "Invalid chapter data" });
+          }
+        }
+
+        const updatedStory = await storyRepository.update(storyId, {
+          title,
+          synopsis,
+          writer,
+          category,
+          tags,
+          status,
+          coverImage: coverImageUrl,
+          chapters: parsedChapters,
+        });
+
         res.status(200).json(updatedStory);
       } catch (error) {
         res.status(500).json({ error: error.message });
